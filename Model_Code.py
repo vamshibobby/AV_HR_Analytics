@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Spyder Editor
-
-This is a temporary script file.
-"""
-
 import os
 import pandas as pd
 import numpy as np
@@ -28,24 +21,27 @@ os.chdir("C:/Users/SAI VAMSHI/Desktop/Analytics_Vidhya/HR")
 df = pd.read_csv("train_LZdllcl.csv")
 test_df = pd.read_csv("test_2umaH9m.csv")
 df.head()
-
+#Checking the count of missing values
 df.isnull().sum()
-
+#Creating lists for categorical and numerical variables
 cat_var = ["department","region","education","gender","recruitment_channel"]
 numeric_variables = ["no_of_trainings","age","previous_year_rating",
                      "length_of_service","KPIs_met >80%","awards_won?",
                      "avg_training_score"]
-
+#Creating a function to impute Education variable
 def imp_education(df1):
     df2 = df1.copy()
     df2.loc[:,"education"] = df2.loc[:,"education"].fillna("None")
     return df2
-
+#Creating function transformers to use in the pipeline
 get_numeric_data = FunctionTransformer(lambda x: x[numeric_variables], validate=False)
 get_cat_data = FunctionTransformer(lambda x: x[cat_var], validate=False)
 impute_education = FunctionTransformer(imp_education)
 create_dummies = FunctionTransformer(lambda x:pd.get_dummies(x,drop_first=True))
 
+#Creating a data preprocessing pipeline
+#numeric_features - Selecting and imputing with mode
+#text_features - Selecting, imputing and creating dummy variables
 prepro_pipeline = PandasFeatureUnion(
     transformer_list = [
         ('numeric_features',Pipeline([
@@ -59,23 +55,23 @@ prepro_pipeline = PandasFeatureUnion(
             ]))
         ])
 
-df_prepro = prepro_pipeline.fit_transform(df)
-
+# df_prepro = prepro_pipeline.fit_transform(df)
+#Pipeline for data preprocessing, standardizing and Logistic Regression
 pl = Pipeline([
     ('union',prepro_pipeline),
     ('stdize',StandardScaler()),
     ('clf',LogisticRegression(solver="liblinear"))
     ])
-
+#Creating train and test datasets
 X = df.drop(["employee_id","is_promoted"],axis=1)
 y = df["is_promoted"]
-
 X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.3,random_state=1234,stratify=y)
 
+#Creating parameters for gird search
 parameters = {'clf__C':[10,30,50,70,100],
               'clf__penalty':["l2","l1"]
     }
-
+#Creating grid search object and running the model
 cv = GridSearchCV(pl,parameters,scoring="f1",verbose=True)
 cv.fit(X_train,y_train)
 cv.best_params_
