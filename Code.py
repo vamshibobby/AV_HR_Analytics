@@ -21,8 +21,10 @@ from sklearn.metrics import classification_report
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+#Changing theworking directory in local system
 os.chdir("C:/Users/SAI VAMSHI/Desktop/Analytics_Vidhya/HR")
 
+#Reading the HR train and test files after downloading from AV website
 df = pd.read_csv("train_LZdllcl.csv")
 test_df = pd.read_csv("test_2umaH9m.csv")
 df.head()
@@ -44,7 +46,7 @@ get_cat_data = FunctionTransformer(lambda x: x[cat_var], validate=False)
 impute_education = FunctionTransformer(imp_education)
 create_dummies = FunctionTransformer(lambda x:pd.get_dummies(x,drop_first=True))
 
-prepro_pipeline = FeatureUnion(
+prepro_pipeline = PandasFeatureUnion(
     transformer_list = [
         ('numeric_features',Pipeline([
             ('selector',get_numeric_data),
@@ -57,7 +59,7 @@ prepro_pipeline = FeatureUnion(
             ]))
         ])
 
-# df_prepro = prepro_pipeline.fit_transform(df)
+df_prepro = prepro_pipeline.fit_transform(df)
 
 pl = Pipeline([
     ('union',prepro_pipeline),
